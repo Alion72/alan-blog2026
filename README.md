@@ -29,6 +29,7 @@ TELEGRAM_CHAT_ID=
 ALLOWED_ORIGIN=
 STORAGE_PATH=/data
 ADMIN_USERNAME=
+ADMIN_PASSWORD_HASH_B64=
 ADMIN_PASSWORD_HASH=
 ```
 
@@ -38,13 +39,15 @@ ADMIN_PASSWORD_HASH=
 
 `STORAGE_PATH` indica donde se guardan los archivos generados en runtime. En produccion se recomienda `/data`.
 
-`ADMIN_USERNAME` y `ADMIN_PASSWORD_HASH` protegen el panel de moderacion en `/admin/`. Genera el hash con PHP usando:
+`ADMIN_USERNAME` y `ADMIN_PASSWORD_HASH_B64` protegen el panel de moderacion en `/admin/`. `ADMIN_PASSWORD_HASH` se mantiene como fallback compatible.
+
+Genera el hash con PHP usando:
 
 ```bash
 php tools/hash_admin_password.php 'tu-contrasena'
 ```
 
-No guardes la contrasena real en archivos versionados.
+Codifica el hash para Coolify con base64 antes de guardarlo en `ADMIN_PASSWORD_HASH_B64`. Asi evitas que caracteres como `$` sean interpretados por Docker/Coolify. No guardes la contrasena real en archivos versionados.
 
 ## Coolify
 

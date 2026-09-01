@@ -37,12 +37,26 @@ function csrf_valid(?string $token): bool {
 }
 
 function admin_configured(): bool {
-  return (getenv('ADMIN_USERNAME') ?: '') !== '' && (getenv('ADMIN_PASSWORD_HASH') ?: '') !== '';
+  return (getenv('ADMIN_USERNAME') ?: '') !== '' && admin_password_hash() !== '';
+}
+
+function admin_password_hash(): string {
+  $passwordHashB64 = getenv('ADMIN_PASSWORD_HASH_B64') ?: '';
+  if ($passwordHashB64 !== '') {
+    $decoded = base64_decode($passwordHashB64, true);
+    if ($decoded !== false && $decoded !== '') {
+      return $decoded;
+    }
+
+    return '';
+  }
+
+  return getenv('ADMIN_PASSWORD_HASH') ?: '';
 }
 
 function admin_credentials_valid(string $username, string $password): bool {
   $expectedUsername = getenv('ADMIN_USERNAME') ?: '';
-  $passwordHash = getenv('ADMIN_PASSWORD_HASH') ?: '';
+  $passwordHash = admin_password_hash();
 
   if ($expectedUsername === '' || $passwordHash === '') return false;
   if (!hash_equals($expectedUsername, $username)) return false;
