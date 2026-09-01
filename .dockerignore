@@ -1,0 +1,16 @@
+.git
+.env
+*.log
+_preview.png
+
+logs/
+storage/logs/*
+!storage/logs/.gitkeep
+
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+.idea/
+.vscode/

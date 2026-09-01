@@ -1,0 +1,5 @@
+Options -Indexes
+DirectoryIndex index.php
+<FilesMatch "^\.ht">
+  Require all denied
+</FilesMatch>
