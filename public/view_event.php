@@ -116,6 +116,36 @@ function flag_emoji(?string $cc): string {
   return $emoji;
 }
 
+function is_public_ip(string $ip): bool {
+  return filter_var(
+    $ip,
+    FILTER_VALIDATE_IP,
+    FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+  ) !== false;
+}
+
+function getClientIp(): string {
+  $candidateHeaders = [
+    'HTTP_CF_CONNECTING_IP',
+    'HTTP_X_FORWARDED_FOR',
+    'HTTP_X_REAL_IP',
+  ];
+
+  foreach ($candidateHeaders as $header) {
+    $value = $_SERVER[$header] ?? '';
+    if ($value === '') continue;
+
+    foreach (explode(',', $value) as $candidate) {
+      $ip = trim($candidate);
+      if ($ip !== '' && is_public_ip($ip)) {
+        return $ip;
+      }
+    }
+  }
+
+  return trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+}
+
 function geo_by_ip(string $ip): array {
   if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
     return ['ok' => false];
@@ -172,7 +202,7 @@ function pretty_event_title(string $evt, string $label): string {
 }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+$ip = getClientIp();
 $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
 enforce_allowed_origin($allowedOrigin);
