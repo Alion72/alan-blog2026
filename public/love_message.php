@@ -3,14 +3,10 @@ declare(strict_types=1);
 date_default_timezone_set('Atlantic/Canary');
 header('Content-Type: application/json; charset=utf-8');
 
-$storagePath = getenv('STORAGE_PATH') ?: dirname(__DIR__) . '/storage';
-$LOG_DIR = rtrim($storagePath, '/\\') . '/logs';
-$LOVE_FILE = $LOG_DIR . '/love_messages.ndjson';
-$allowedOrigin = trim((string)(getenv('ALLOWED_ORIGIN') ?: ''));
+require_once __DIR__ . '/includes/messages_store.php';
 
-if (!is_dir($LOG_DIR)) {
-  @mkdir($LOG_DIR, 0775, true);
-}
+$LOVE_FILE = messages_file_path();
+$allowedOrigin = trim((string)(getenv('ALLOWED_ORIGIN') ?: ''));
 
 function enforce_allowed_origin(string $allowedOrigin): void {
   if ($allowedOrigin === '') return;
@@ -47,18 +43,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 if (($_GET['action'] ?? '') === 'list') {
   $items = [];
 
-  if (is_file($LOVE_FILE)) {
-    $lines = @file($LOVE_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-    foreach (array_slice($lines, -100) as $line) {
-      $r = json_decode($line, true);
-      if (!is_array($r)) continue;
-      $items[] = [
-        'name' => (string)($r['name'] ?? ''),
-        'relationship' => (string)($r['relationship'] ?? ''),
-        'message' => (string)($r['message'] ?? ''),
-        'ts' => (string)($r['ts'] ?? ''),
-      ];
-    }
+  foreach (array_slice(read_message_records(), -100) as $record) {
+    $r = $record['data'];
+    $items[] = [
+      'name' => (string)($r['name'] ?? ''),
+      'relationship' => (string)($r['relationship'] ?? ''),
+      'message' => (string)($r['message'] ?? ''),
+      'ts' => (string)($r['ts'] ?? ''),
+    ];
   }
 
   $items = array_reverse($items);
@@ -87,11 +79,7 @@ $row = [
   'ua' => $_SERVER['HTTP_USER_AGENT'] ?? '',
 ];
 
-@file_put_contents(
-  $LOVE_FILE,
-  json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n",
-  FILE_APPEND | LOCK_EX
-);
+append_message_record($row);
 
 echo json_encode([
   'ok' => true,

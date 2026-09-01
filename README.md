@@ -12,6 +12,7 @@ public/
   view_event.php
   love_message.php
   health.php
+  admin/
   assets/
 storage/
   logs/
@@ -27,6 +28,8 @@ TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
 ALLOWED_ORIGIN=
 STORAGE_PATH=/data
+ADMIN_USERNAME=
+ADMIN_PASSWORD_HASH=
 ```
 
 `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` activan las notificaciones a Telegram. Si estan vacias, el sitio sigue funcionando y registra el aviso en `telegram_errors.log`.
@@ -34,6 +37,14 @@ STORAGE_PATH=/data
 `ALLOWED_ORIGIN` es opcional. Si se define, debe ser el origen permitido, por ejemplo `https://example.com`. Tambien acepta varios origenes separados por coma.
 
 `STORAGE_PATH` indica donde se guardan los archivos generados en runtime. En produccion se recomienda `/data`.
+
+`ADMIN_USERNAME` y `ADMIN_PASSWORD_HASH` protegen el panel de moderacion en `/admin/`. Genera el hash con PHP usando:
+
+```bash
+php tools/hash_admin_password.php 'tu-contrasena'
+```
+
+No guardes la contrasena real en archivos versionados.
 
 ## Coolify
 
@@ -60,3 +71,13 @@ Respuesta esperada:
 ```json
 {"ok":true}
 ```
+
+## Admin
+
+Panel:
+
+```text
+/admin/
+```
+
+Permite iniciar sesion, listar recuerdos y eliminar comentarios mediante POST con proteccion CSRF. Los datos se leen desde `STORAGE_PATH/love_messages.ndjson`.
